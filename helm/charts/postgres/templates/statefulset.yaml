@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: postgres
+    release: {{ .Release.Name }}-postgres
+  name: postgres
+  namespace: {{ .Release.Namespace }}
+spec:
+  serviceName: {{ .Release.Name }}-headless
+  replicas: 
+
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+        {{- include "postgres.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - image: postgis/postgis:15-3.3-alpine
+        name: postgres
+        ports:
+          - containerPort: {{ .Values.service.port }}
+            name: postgres-tcp
+        resources:
+          limits:
+            memory: 1Gi
+        envFrom:
+          - configMapRef:
+              name: {{ .Release.Name }}-postgres-env
+        volumeMounts:
+          - name: datadir
+            mountPath: {{ .Values.config.dataDirMountPath }}
+          - name: db-init-scripts
+            mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: db-init-scripts
+          configMap:
+            name: db-init-scripts
+            defaultMode: 0744
+  volumeClaimTemplates:
+    - metadata:
+        name: datadir
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: {{ .Values.config.storageClass }}
+        resources:
+          requests:
+            storage: 256Mi

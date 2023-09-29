@@ -1,0 +1,16 @@
+[flake8]
+ignore = 
+   # Black splits lines before binary operators
+    W503,
+    #  Black enforces whitespace around slice operators
+    E203,
+    # Do not enforce newlines before class docstrings
+    D203
+exclude =
+    .git
+    __pycache__,
+    dist,
+    build,
+    venv,
+
+max-line-length=99
